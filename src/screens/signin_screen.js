@@ -23,7 +23,7 @@ export default function SignIn() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Sign in to your account:</Text>
+      <Text style={styles.text}>Sign in to your Kcraftek account:</Text>
 
       <TextInput
         style={styles.formInput}
@@ -41,7 +41,7 @@ export default function SignIn() {
       />
 
       <TouchableOpacity style={styles.button} onPress={handlePress}>
-        <Text style={styles.buttonText}>Sumbit</Text>
+        <Text style={styles.buttonText}>Submit</Text>
       </TouchableOpacity>
 
     </View>
@@ -50,20 +50,21 @@ export default function SignIn() {
 
 const styles = StyleSheet.create({
   button: {
-    width: 200,
+    width: '100%',
     padding: 5,
-    backgroundColor: '#ff9999',
-    borderWidth: 2,
-    borderColor: 'white',
+    backgroundColor: '#1b6a1b',
+    elevation: 5,
+    paddingVertical: 10,
     borderRadius: 15,
     alignSelf: 'center',
-    margin: "2%",
+    margin: '5%',
   },
   buttonText: {
     fontSize:20,
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
+    padding: 5
   },
   container: {
     height: '100%',

@@ -5,7 +5,7 @@ import * as firebase from 'firebase';
 import apiKeys from './config/keys';
 import WelcomeScreen from './src/screens/welcome_screen';
 import SignUp from './src/screens/signup_screen';
-import SignIn from './src/screens/signup_screen';
+import SignIn from './src/screens/signin_screen';
 import LoadingScreen from './src/screens/loading_screen';
 import Dashboard from './src/screens/dashboard_screen';
 

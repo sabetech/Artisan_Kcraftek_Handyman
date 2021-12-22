@@ -1,4 +1,4 @@
-import {ImageBackground, StyleSheet, View, Text, TouchableOpacity} from 'react-native';
+import {ImageBackground, StyleSheet, View, Text, TouchableOpacity, Image} from 'react-native';
 import React from 'react';
 
 
@@ -6,9 +6,13 @@ export default function WelcomeScreen ({navigation}) {
   return (
      <ImageBackground
       style={styles.background}
-      source={require('../../assets/background.jpg')}>
+      source={require('../../assets/background.png')}>
+        
+        <Image source={require("../../assets/kcraftek_logo.png")} style={{width: 110, height: 90, position: 'absolute', top: 60}}/>
+        
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>Welcome to Firebase/Firestore Example</Text>
+          
+        <Text style={styles.title}>Welcome</Text>
       </View>
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Sign Up')} >
         <Text style={styles.buttonText}>Sign Up</Text>
@@ -28,35 +32,36 @@ const styles = StyleSheet.create({
       alignItems: 'center',
     },
     button: {
-      width: 200,
+      width: '75%',
       borderRadius: 15,
-      borderWidth: 3,
-      borderColor: 'white',
-      backgroundColor: '#4ecdc4',
+      elevation: 5,
+      backgroundColor: '#1b6a1b',
       padding: 5,
-      margin: '2%'
+      margin: '2%',
+      marginTop: 30
     },
     buttonText: {
       fontSize: 20,
       fontWeight: 'bold',
-      color: 'navy',
-      textAlign: 'center'
+      color: 'white',
+      textAlign: 'center',
+      paddingVertical: 10
     },
     inlineText: {
       fontSize: 20,
       fontWeight: 'bold',
-      color: 'navy',
+      color: '#1b6a1b',
       textAlign: 'center',
-      marginTop: '5%',
+      marginTop: '10%',
     },
     title: {
-      fontSize: 35,
+      fontSize: 28,
       fontWeight: 'bold',
-      color: 'white',
+      color: '#1b6a1b',
       textAlign: 'center'
     },
     titleContainer: {
       position: 'absolute',
-      top: 170,
+      top: 200
     },
   });
