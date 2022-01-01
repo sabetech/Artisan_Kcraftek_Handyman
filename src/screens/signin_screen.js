@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, ImageBackground } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import {signIn} from '../../api/firebase_functions';
 
-export default function SignIn() {
+const kcraftek_color = "hsla(120, 60%, 26%, 1)";
+
+export default function SignIn({navigation}) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -19,9 +21,13 @@ export default function SignIn() {
     signIn(email, password);
     setEmail('');
     setPassword('');
+    navigation.navigate('Loading');
   };
 
   return (
+    <ImageBackground
+      style={styles.background}
+      source={require('../../assets/background.png')}>
     <View style={styles.container}>
       <Text style={styles.text}>Sign in to your Kcraftek account:</Text>
 
@@ -44,13 +50,25 @@ export default function SignIn() {
         <Text style={styles.buttonText}>Submit</Text>
       </TouchableOpacity>
 
+      <Text
+          style={styles.text}
+      >
+          Don't have an account? <Text style={[styles.text, styles.link]} onPress={() => navigation.navigate("Sign Up")}>Register Now</Text>
+      </Text>
+
     </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   button: {
-    width: '100%',
+    width: 300,
     padding: 5,
     backgroundColor: '#1b6a1b',
     elevation: 5,
@@ -69,7 +87,6 @@ const styles = StyleSheet.create({
   container: {
     height: '100%',
     width: '100%',
-    backgroundColor: '#3FC5AB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -77,15 +94,20 @@ const styles = StyleSheet.create({
     width: 300,
     fontSize:18,
     borderWidth: 1,
-    borderColor:'#a4eddf',
+    borderColor:'#1b6a1b',
     padding: 10,
     margin: 5,
   },
   text: {
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 15,
     margin: 10,
     fontWeight: 'bold',
-    color: '#2E6194',
-  }
+    color: '#1b6a1b',
+  },
+  link: {
+    color: kcraftek_color,
+    fontSize: 15,
+    fontWeight: "500"
+}
 });

@@ -8,7 +8,7 @@ export default function WelcomeScreen ({navigation}) {
       style={styles.background}
       source={require('../../assets/background.png')}>
         
-        <Image source={require("../../assets/kcraftek_logo.png")} style={{width: 110, height: 90, position: 'absolute', top: 60}}/>
+        <Image source={require("../../assets/kcraftek_logo.png")} style={{width: 110, height: 90, position: 'absolute', top: 60}} />
         
       <View style={styles.titleContainer}>
           
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#1b6a1b',
       padding: 5,
       margin: '2%',
-      marginTop: 30
+      marginTop: 20
     },
     buttonText: {
       fontSize: 20,
@@ -62,6 +62,6 @@ const styles = StyleSheet.create({
     },
     titleContainer: {
       position: 'absolute',
-      top: 200
+      top: 180
     },
   });

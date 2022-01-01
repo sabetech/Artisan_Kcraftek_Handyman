@@ -43,14 +43,14 @@ const styles = StyleSheet.create({
       paddingTop: Platform.OS === 'ios' ? 20 : 0,
     },
     StarImage: {
-        width: 40,
-        height: 40,
+        width: 30,
+        height: 30,
         resizeMode: 'cover',
     },
     childView: {
         justifyContent: 'center',
         flexDirection: 'row',
-        marginTop: 30,
+        marginTop: 5,
       },
 });
 

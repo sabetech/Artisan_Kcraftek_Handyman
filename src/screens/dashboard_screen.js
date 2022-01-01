@@ -1,15 +1,25 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Alert, Switch} from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import { View, Text, StyleSheet, Alert, Modal,Pressable} from 'react-native';
+import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 import * as firebase from 'firebase';
-import {loggingOut} from '../../api/firebase_functions';
+import {loggingOut, toggleOffline, acceptTask} from '../../api/firebase_functions';
 import Stars from './rating_stars';
+import { useUserInfo } from '../contexts/UserContext';
+import "firebase/firestore";
+import { Audio } from 'expo-av';
+import KcraftekStatus from '../components/kcraftek_status';
+
+const kcraftek_color = "hsla(120, 60%, 26%, 1)";
 
 export default function Dashboard({ navigation }) {
   const [fullname, setFirstName] = useState('');
-  let currentUserUID = firebase.auth().currentUser.uid;
-  
+  const [isEnabled, setIsEnabled] = useState(false);
+  const currentUserUID = firebase.auth().currentUser.uid;
+  const userInfoContext = useUserInfo();
+  const [statusOfApp, setStatusOfApp] = useState('Stay online/available to keep getting Client Requests!');
+  const [sound, setSound] = React.useState();
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     async function getUserInfo(){
@@ -24,94 +34,177 @@ export default function Dashboard({ navigation }) {
           Alert.alert('No user data found!')
         } else {
           let dataObj = doc.data();
-          setFirstName(dataObj.name)
+          setFirstName(dataObj.name);
+          setIsEnabled(dataObj.is_active);
+          userInfoContext.setUserInfo({...dataObj, id: doc.id});
+          
         }
       } catch (err){
       Alert.alert('There is an error.', err.message)
       }
     }
     getUserInfo();
-  })
+  },[]);
+
+  useEffect(() => {
+    //requests are gonna come thru here ... :-) not great but yeah ... 
+    const db = firebase.firestore();
+    const unsubscribe = db.collection('artisan_users').doc(currentUserUID)
+          .onSnapshot(querySnapshot => {
+           userInfoContext.setUserInfo(querySnapshot.data());
+    });
+
+    return unsubscribe;
+  },[]);
+
+  useEffect(() => {
+
+    //check to see if the userInfo is status is requesting ... 
+    if (userInfoContext.userInfo.request?.status == 'requesting'){
+        console.log("a request is coming in ... ");
+        //play a sound and be changing the color up there till he responds or someone else responds
+        playIncomingRequestSound();
+        setStatusOfApp("Your Service is being Requested! Accept?");
+        setModalVisible(true);
+    }
+
+    if (userInfoContext.userInfo.request?.status == 'accepted'){
+      console.log("ACCEPTED NOW MOVE TO THE MAP SCREEN AND NAVIGATE TO THE CLIENTS HOUSE!");
+    }
+
+  },[userInfoContext.userInfo]);
+
+  useEffect(() => {
+    return sound
+      ? () => {
+          console.log('Unloading Sound');
+          sound.unloadAsync(); }
+      : undefined;
+  }, [sound]);
+
+  const handleToggleAvailability = () => {
+
+    setIsEnabled(previousState => !previousState);
+    toggleOffline(userInfoContext.userInfo);
+
+  }
+
+  async function playIncomingRequestSound(){
+    console.log('Loading Sound');
+    const { sound } = await Audio.Sound.createAsync(
+       require('../../assets/i-did-it-message-tone.mp3')
+    );
+    setSound(sound);
+    sound.setIsLoopingAsync(false);
+    console.log('Playing Sound');
+    //await sound.playAsync();
+  }
+
+  const _yes = () => {
+    acceptTask(userInfoContext.userInfo);
+    setStatusOfApp("You have successfully accepted the Task. Follow the Map to the Client's Location!");
+    setModalVisible(false);
+
+    //navigate to a map screen with the client location and task information
+
+  }
+
+  const _no = () => {
+    setModalVisible(false);
+  }
 
   const handlePress = () => {
+    
     loggingOut();
     navigation.replace('Home');
   };
 
-  const [isEnabled, setIsEnabled] = useState(false);
-  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-
   return (
-    <View style={styles.container}>
-      <StatusBar />
-      <View style={styles.headPanel}>
-        <Text style={styles.headPanelText}>Hi {fullname && fullname.split(' ')[0]}</Text>
-      </View>
-      <Text style={styles.titleText}>Dashboard</Text>
-      <View style={styles.dashboardCard1}>
-        <Text style={styles.statusText}>Status: {isEnabled ? 'Available' : 'Offline'}
-          <Switch
-            trackColor={{ false: "#767577", true: "brown" }}
-            thumbColor={isEnabled ? "#1b6a1b" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={toggleSwitch}
-            value={isEnabled}
-          />
-        </Text>
-      </View>
-      <View style={styles.dashboardCard1}>
-        <Text style={styles.statusText}>Job Completed: 0</Text>
-      </View>
-      <View style={[styles.dashboardCard1, {height: 120}]}>
-        <Text style={styles.statusText}>Rating</Text>
-        <Stars />
-      </View>
-      {/* <TouchableOpacity style={styles.button} onPress={handlePress}>
-        <Text style={styles.buttonText}>Log Out</Text>
-      </TouchableOpacity> */}
+    <View style={{flex: 1}}>
+      
+        <StatusBar />
+        <View style={[styles.headPanel, {backgroundColor: isEnabled ? kcraftek_color:'#dbdbdb'}]}>
+          <Text style={[styles.headPanelText, {color: isEnabled ? 'white' :kcraftek_color}]}>Good Day <Text style={{fontWeight: 'bold', fontStyle: 'italic'}}>{fullname && fullname.split(' ')[0]}!</Text></Text>
+          <KcraftekStatus isEnabled={isEnabled} kcraftek_color={kcraftek_color} statusOfApp={statusOfApp} artisan={userInfoContext.userInfo} />
+        </View>
+        <ScrollView style={styles.container}>
+          <Text style={styles.titleText}>Dashboard</Text>
+
+          <TouchableOpacity onPress={handleToggleAvailability}>
+            <View style={[styles.availabilityStyle, {backgroundColor: isEnabled ? kcraftek_color:'#dbdbdb'}]}>
+              <Text style={[styles.statusText, {color: isEnabled ? 'white': kcraftek_color}]}>Availability: {isEnabled ? 'Available' : 'Offline'}</Text>
+              <Text style={[styles.tapToChange, {color: isEnabled ? 'white' : kcraftek_color}]}>Tap to Change!</Text>
+            </View>
+          </TouchableOpacity>
+        
+          <View style={styles.dashboardCard}>
+            <Text style={styles.dashboardCardText}>Job Completed: 0</Text>
+          </View>
+          <View style={styles.dashboardCard}>
+            <Text style={styles.dashboardCardText}>Average Rating</Text>
+            <Stars />
+          </View>
+          <View style={styles.dashboardCard}>
+            <Text style={[styles.dashboardCardText,{fontSize: 25, fontWeight: 'bold'}]}>Total Earned: GHC 0.00</Text>
+          </View>
+          <TouchableOpacity style={[styles.dashboardCard,{backgroundColor: 'red'}]} onPress={handlePress}>
+            <Text style={styles.buttonText}>Log Out</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        <View style={styles.centeredView}>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => {
+              setModalVisible(!modalVisible);
+            }}>
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
+                <Text style={styles.modalText}>Your Services are being requested! Accept?</Text>
+                <View style={styles.buttonLayout}>
+                  <Pressable
+                              style={styles.button}
+                              onPress={() => _yes() }
+                  >
+                      <Text style={styles.textStyle}>Yes</Text>
+                  </Pressable>
+                  <Pressable
+                      style={styles.button}
+                      onPress={() => _no() }
+                  >
+                      <Text style={styles.textStyle}>No</Text>
+                  </Pressable>  
+                </View>
+              </View>
+            </View>
+          </Modal>
+    </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+  availabilityStyle: {
+    height: 80,
+    margin: 10,    
+    alignContent: 'center',
+    justifyContent: 'center'
+  },  
   button: {
-    width: 150,
+    width: 80,
     padding: 5,
-    backgroundColor: '#ff9999',
-    borderWidth: 2,
-    borderColor: 'white',
-    borderRadius: 15,
+    margin: 5,
+    borderWidth: 1,
+    borderColor: 'black',
+    borderRadius: 10,
     alignSelf: 'center',
   },
-  dashboardCard1: {
-    borderWidth: .5,
-    borderRadius: 5,
-    borderColor: 'grey',
-    height: 80,
-    elevation: 3,
-    margin: 10,
-    overflow: 'hidden',
-    backgroundColor: 'white'
-  },  
-  statusText:{
-    fontSize: 24,
-    
-  },
-  dashboardCardContainer:{
-    padding: 10,
-    flex: 1,
-    flexDirection: 'row'
-  },
-  headPanel: {
-    backgroundColor: "#1b6a1b",
-    marginTop: 20,
-    height: "20%"
-  },
-  headPanelText: {
-    color:'white',
-    fontSize: 32,
-    padding: 5,
-    marginTop: 20
+  buttonLayout: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignContent:'center'
   },
   buttonText: {
     fontSize:20,
@@ -120,12 +213,66 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   container: {
-    height: '100%',
+    //height: '100%',
     width: '100%',
-    backgroundColor: '#FFF',
-    //alignItems: 'center',
-    //justifyContent: 'center',
+    backgroundColor: 'white'
   },
+  dashboardCard: {
+    height: 80,
+    margin: 10,    
+    alignContent: 'center',
+    justifyContent: 'center',
+    backgroundColor: kcraftek_color
+  },
+  dashboardCardContainer:{
+    padding: 10,
+    flex: 1,
+    flexDirection: 'row'
+  },
+  dashboardCardText: {
+    color:'white',
+    fontSize: 18,
+    marginLeft: 10
+  },
+  headPanel: {
+    marginTop: 20,
+    height: "20%"
+  },
+  headPanelText: {    
+    fontSize: 24,
+    padding: 5,
+    marginTop: 25
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center",
+    fontSize: 18
+  },
+  modalView: {
+    margin: 10,
+    backgroundColor: "#ffffff",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  
+  statusText:{
+    fontSize: 18,
+    marginLeft: 10
+  },
+  tapToChange:{
+    alignSelf: 'flex-end', 
+    color:'white',
+    marginRight:10
+  }, 
   text: {
     textAlign: 'center',
     fontSize: 20,
@@ -135,10 +282,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'black',
   },
+  textStyle:{
+    alignSelf: 'center'
+  },
   titleText: {
     textAlign: 'left',
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#2E6194',
-  },
+    color: kcraftek_color,
+    marginLeft: 15
+  }
 });
