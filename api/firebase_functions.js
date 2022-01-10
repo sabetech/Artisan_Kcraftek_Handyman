@@ -99,13 +99,14 @@ export async function declineTask(artisan){
   try{
     const db = firebase.firestore();
 
-    db.collection("artisan_users").doc(artisan.id).update({
-      "request":{
+    const data = db.collection("artisan_users").doc(artisan.id);
+    await data.update({
+      'request':{
         'status':'idle'
       }
     });
   }catch(erro){
-
+    console.log(erro);
   }
 }
 

@@ -11,6 +11,7 @@ import Dashboard from './src/screens/dashboard_screen';
 import { UserProvider } from './src/contexts/UserContext';
 
 import React from 'react';
+import MapScreen from './src/screens/maps_screen';
 
 
 const Stack = createStackNavigator();
@@ -30,6 +31,7 @@ export default function App() {
         <Stack.Screen name='Sign Up' component={SignUp} options={{ headerShown: false }}/>
         <Stack.Screen name='Sign In' component={SignIn} options={{ headerShown: false }}/>
         <Stack.Screen name={'Dashboard'} component={Dashboard} options={{ headerShown: false }} />
+        <Stack.Screen name={'MapScreen'} component={MapScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Alert, Modal,Pressable} from 'react-native';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 import * as firebase from 'firebase';
-import {loggingOut, toggleOffline, acceptTask} from '../../api/firebase_functions';
+import {loggingOut, toggleOffline, acceptTask, declineTask} from '../../api/firebase_functions';
 import Stars from './rating_stars';
 import { useUserInfo } from '../contexts/UserContext';
 import "firebase/firestore";
@@ -70,6 +70,10 @@ export default function Dashboard({ navigation }) {
 
     if (userInfoContext.userInfo.request?.status == 'accepted'){
       console.log("ACCEPTED NOW MOVE TO THE MAP SCREEN AND NAVIGATE TO THE CLIENTS HOUSE!");
+      navigation.navigate('MapScreen', {
+        clientInfo: userInfoContext.userInfo.request.client,
+        taskInfo: userInfoContext.userInfo.request.info
+      })
     }
 
   },[userInfoContext.userInfo]);
@@ -97,7 +101,7 @@ export default function Dashboard({ navigation }) {
     setSound(sound);
     sound.setIsLoopingAsync(false);
     console.log('Playing Sound');
-    //await sound.playAsync();
+    await sound.playAsync();
   }
 
   const _yes = () => {
@@ -111,6 +115,8 @@ export default function Dashboard({ navigation }) {
 
   const _no = () => {
     setModalVisible(false);
+    declineTask(userInfoContext.userInfo);
+    setStatusOfApp("You declined a request from a client!");
   }
 
   const handlePress = () => {

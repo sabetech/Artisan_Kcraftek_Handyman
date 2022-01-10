@@ -23,7 +23,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.animax.Artisan_Kcraftek_Handyman"
     },
     "web": {
       "favicon": "./assets/favicon.png"
