@@ -85,7 +85,6 @@ export default function SignUp({ navigation }) {
         <SelectDropdown
             data={occupations}
             onSelect={(selectedItem, index) => {
-                console.log(selectedItem, index)
                 setOccupation(selectedItem);
             }}
             defaultButtonText={"Select Occupations"}

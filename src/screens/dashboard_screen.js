@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Alert, Modal,Pressable} from 'react-native';
 import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 import * as firebase from 'firebase';
-import {loggingOut, toggleOffline, acceptTask, declineTask} from '../../api/firebase_functions';
+import {loggingOut, toggleOffline, previewTask, declineTask} from '../../api/firebase_functions';
 import Stars from './rating_stars';
 import { useUserInfo } from '../contexts/UserContext';
 import "firebase/firestore";
@@ -61,19 +61,17 @@ export default function Dashboard({ navigation }) {
 
     //check to see if the userInfo is status is requesting ... 
     if (userInfoContext.userInfo.request?.status == 'requesting'){
-        console.log("a request is coming in ... ");
         //play a sound and be changing the color up there till he responds or someone else responds
         playIncomingRequestSound();
-        setStatusOfApp("Your Service is being Requested! Accept?");
+        setStatusOfApp("Your Service is being Requested!");
         setModalVisible(true);
     }
 
-    if (userInfoContext.userInfo.request?.status == 'accepted'){
-      console.log("ACCEPTED NOW MOVE TO THE MAP SCREEN AND NAVIGATE TO THE CLIENTS HOUSE!");
+    if (userInfoContext.userInfo.request?.status == 'preview'){
+      
       navigation.navigate('MapScreen', {
-        clientInfo: userInfoContext.userInfo.request.client,
-        taskInfo: userInfoContext.userInfo.request.info
-      })
+        requestInfo: userInfoContext.userInfo
+      });
     }
 
   },[userInfoContext.userInfo]);
@@ -81,7 +79,6 @@ export default function Dashboard({ navigation }) {
   useEffect(() => {
     return sound
       ? () => {
-          console.log('Unloading Sound');
           sound.unloadAsync(); }
       : undefined;
   }, [sound]);
@@ -94,23 +91,45 @@ export default function Dashboard({ navigation }) {
   }
 
   async function playIncomingRequestSound(){
-    console.log('Loading Sound');
+    
     const { sound } = await Audio.Sound.createAsync(
        require('../../assets/i-did-it-message-tone.mp3')
     );
     setSound(sound);
     sound.setIsLoopingAsync(false);
-    console.log('Playing Sound');
+    
     await sound.playAsync();
   }
 
-  const _yes = () => {
-    acceptTask(userInfoContext.userInfo);
-    setStatusOfApp("You have successfully accepted the Task. Follow the Map to the Client's Location!");
+  //This function belongs to the maps screen!!!
+  const _previewRequestInfo = () => {
+    previewTask(userInfoContext.userInfo);
+    setStatusOfApp("You are previewing the request!!!");
     setModalVisible(false);
 
     //navigate to a map screen with the client location and task information
+  }
 
+  const artisanStatus = () => {
+    if (userInfoContext.userInfo.is_active){
+
+      switch(userInfoContext.userInfo.request.status){
+        case "idle":
+          return "Available";
+        case "requesting":
+          return "Incoming Request ...";
+        case "accepted":
+          return "Request Accepted. Yet to get to destination.";
+        case "arrived":
+          return "Arrived at destination!";
+        case "job_started":
+          return "Busy!"
+        case "job_completed":
+          return "Task Completed";
+      }
+
+    }
+    return "Unknown Status";
   }
 
   const _no = () => {
@@ -138,11 +157,15 @@ export default function Dashboard({ navigation }) {
 
           <TouchableOpacity onPress={handleToggleAvailability}>
             <View style={[styles.availabilityStyle, {backgroundColor: isEnabled ? kcraftek_color:'#dbdbdb'}]}>
-              <Text style={[styles.statusText, {color: isEnabled ? 'white': kcraftek_color}]}>Availability: {isEnabled ? 'Available' : 'Offline'}</Text>
+              <Text style={[styles.statusText, {color: isEnabled ? 'white': kcraftek_color}]}>Status: {artisanStatus()}</Text>
               <Text style={[styles.tapToChange, {color: isEnabled ? 'white' : kcraftek_color}]}>Tap to Change!</Text>
             </View>
           </TouchableOpacity>
-        
+
+          <View style={styles.dashboardCard}>
+            <Text style={styles.dashboardCardText}>Occupation: {userInfoContext.userInfo.occupations}</Text>
+          </View>
+
           <View style={styles.dashboardCard}>
             <Text style={styles.dashboardCardText}>Job Completed: 0</Text>
           </View>
@@ -168,11 +191,11 @@ export default function Dashboard({ navigation }) {
             }}>
             <View style={styles.centeredView}>
               <View style={styles.modalView}>
-                <Text style={styles.modalText}>Your Services are being requested! Accept?</Text>
+                <Text style={styles.modalText}>Your Services are being requested! Show Request Information?</Text>
                 <View style={styles.buttonLayout}>
                   <Pressable
                               style={styles.button}
-                              onPress={() => _yes() }
+                              onPress={() => _previewRequestInfo() }
                   >
                       <Text style={styles.textStyle}>Yes</Text>
                   </Pressable>

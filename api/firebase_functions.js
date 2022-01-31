@@ -48,7 +48,6 @@ export async function loggingOut() {
 }
 
 export async function toggleOffline(artisan) {
-  console.log(artisan.is_active);
   try{
     const db = firebase.firestore();
     db.collection("artisan_users").doc(artisan.id).update({
@@ -60,17 +59,34 @@ export async function toggleOffline(artisan) {
   }
 }
 
-//status = [idle, requesting, accepted, job_started, job_completed, job_cancelled]
-export async function acceptTask(artisan){
+//status = [idle, requesting, preview, accepted, job_started, job_completed, job_cancelled]
+export async function previewTask(artisan){
+  
+  try{
+    const db = firebase.firestore();
+    const data = await db.collection("artisan_users").doc(artisan.id);
+    await data.update({
+        'request':{
+          'status':'preview',
+          'client':artisan.request.client,
+          'info': artisan.request.info
+        }
+      });
+
+  }catch(err){
+    console.log(err);
+  }
+}
+
+export async function acceptTask(artisan) {
   //set request status to accepted for this artisan
   //notify client that made req of accepted artisan
   
   //check to see if the person is not already busy
-  //check
-  console.log(artisan);
+  //console.log(artisan);
   try{
     const db = firebase.firestore();
-   await db.collection('artisan_users')
+    await db.collection('artisan_users')
       .where('request.client.id', '==', artisan.request.client.id)
       .get()
       .then((querySnapshot) => {
@@ -81,8 +97,8 @@ export async function acceptTask(artisan){
         })
       });
       
-  const data = await db.collection("artisan_users").doc(artisan.id);
-   await data.update({
+    const data = await db.collection("artisan_users").doc(artisan.id);
+    await data.update({
       'request':{
         'status':'accepted',
         'client':artisan.request.client,
@@ -93,6 +109,7 @@ export async function acceptTask(artisan){
   }catch(err){
     console.log(err);
   }
+
 }
 
 export async function declineTask(artisan){

@@ -12,13 +12,15 @@ import { UserProvider } from './src/contexts/UserContext';
 
 import React from 'react';
 import MapScreen from './src/screens/maps_screen';
+import { LogBox } from 'react-native';
 
 
 const Stack = createStackNavigator();
 export default function App() {
 
+  LogBox.ignoreAllLogs(true);
+
   if (!firebase.apps.length) {
-    console.log('Connected with Firebase')
     firebase.initializeApp(apiKeys.firebaseConfig);
   }
 
